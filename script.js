@@ -1,4 +1,3 @@
-// prefer server-start time if present, otherwise use client time
 const span = document.getElementById('clock-server');
 let now = span && span.dataset && span.dataset.ts
   ? new Date(parseInt(span.dataset.ts,10)*1000)

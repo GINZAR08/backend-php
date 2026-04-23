@@ -14,9 +14,9 @@
     <?php
 
     $servername = "brighton.domains";
-    $username = " jja43";
+    $username = " jja43_comment";
     $password = "ExcaliburMorgan";
-    $dbname = "jja43_commentart";
+    $dbname = "jja43_art";
 
     $conn = new mysqli($servername, $username, $password, $dbname);
 
