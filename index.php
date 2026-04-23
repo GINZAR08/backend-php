@@ -14,19 +14,51 @@
     <?php
 
     $servername = "brighton.domains";
-    $username = " jja43_comment";
-    $password = "ExcaliburMorgan";
+    $username = "jja43_comment";
+    $password = "ExcalMorgan";
     $dbname = "jja43_art";
 
     $conn = new mysqli($servername, $username, $password, $dbname);
-
+   try {
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
     echo "Connected successfully";
-    ?>
+   } catch (Exception $e) {
+    echo "Connection failed: " . $e->getMessage();
+   }
+
+ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
+   $firstName = $_POST["firstname"];
+   $lastName = $_POST["lastname"];
+   $ID = $_POST["ID"];
+   $comment = $_POST["comment"];
+ }
+   ?>
+
+<?php
+  $sql = "INSERT INTO people (ID, firstname, lastname, comment) VALUES (?,? , ?, ?)";
+
+  $stmt = $conn->prepare($sql);
+   if (!$stmt) { die('Prepare failed: '.$conn->error); }
+   $stmt->bind_param("isss", $ID, $firstName, $lastName, $comment);
+    $result = $stmt->execute();
+    if ($result === false) {
+        throw new Exception("Error: " . $stmt->error);
+    }
+   //$stmt = $conn->prepare($sql);
+ // $stmt->bind_param("isss", $ID, $firstName, $lastName, $comment);
+ // $result = $stmt->execute();
+ try {
+    if ($result === false){
+        throw new Exception("Error:cant get results " . $stmt->error);
+    }
+ } catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+ }
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -38,18 +70,6 @@
 <body>
     <h1>Comments</h1>
 
-    <form action="submit_comment.php" method="post">
-        <label for="comment">Comment:</label><br>
-        <textarea id="comment" name="comment" rows="4" cols="50"></textarea><br>
-        <input type="submit" value="Submit">
-        <?php
-              if (isset($_POST["response"])) {
-                echo "<p> your response has been received at " . $date->format('Y-m-d') . "</p>";
-              }
-?>
-    </form>
-
-    
 
 </body>
 <script src="script.js"></script>
