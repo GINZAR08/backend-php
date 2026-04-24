@@ -1,6 +1,4 @@
 
-
-
 <?php
     $date = new DateTimeImmutable('');
     date_default_timezone_set('UTC');
@@ -13,7 +11,7 @@
 
     <?php
 
-    $servername = "brighton.domains";
+    $servername = "localhost";
     $username = "jja43_comment";
     $password = "ExcalMorgan";
     $dbname = "jja43_art";
@@ -27,24 +25,29 @@
    } catch (Exception $e) {
     echo "Connection failed: " . $e->getMessage();
    }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {   
+if (isset($_POST["firstname"]) && isset($_POST["lastname"]) && isset($_POST["comment"])) {
 
- if ($_SERVER["REQUEST_METHOD"] == "POST") {
+   $firstName = trim($_POST['firstname']);
+    $lastName  = trim($_POST['lastname']);
+    $comment   = trim($_POST['comment']);
 
 
-   $firstName = $_POST["firstname"];
-   $lastName = $_POST["lastname"];
-   $ID = $_POST["ID"];
-   $comment = $_POST["comment"];
- }
-   ?>
+} else {
+   die ("Error: Missing required fields.");
+  }
+}
+  ?>
 
 <?php
-  $sql = "INSERT INTO people (ID, firstname, lastname, comment) VALUES (?,? , ?, ?)";
+  $sql = " INSERT INTO people (firstname, lastname, comment) VALUES (? ,?, ?) ";
 
   $stmt = $conn->prepare($sql);
    if (!$stmt) { die('Prepare failed: '.$conn->error); }
-   $stmt->bind_param("isss", $ID, $firstName, $lastName, $comment);
-    $result = $stmt->execute();
+   $stmt->bind_param("sss", $firstName, $lastName, $comment);
+   $result = $stmt->execute();
+
+
     if ($result === false) {
         throw new Exception("Error: " . $stmt->error);
     }
