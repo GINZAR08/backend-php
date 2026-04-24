@@ -1,4 +1,4 @@
-POST https://jja43.brighton.domains/backend/index.php
+GET https://jja43.brighton.domains/backend/index.php
 Content-Type: application/x-www-form-urlencoded
 
 firstname=solid&lastname=snake
