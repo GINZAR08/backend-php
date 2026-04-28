@@ -3,7 +3,7 @@
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST["firstname"]) && isset($_POST["lastname"]) && isset($_POST["comment"])) {
-    
+
     $firstName = trim($_POST['firstname']);
     $lastName = trim($_POST['lastname']);
     $comment = trim($_POST['comment']);
@@ -38,9 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result === false) {
       throw new Exception("Error: " . $stmt->error);
     }
-    //$stmt = $conn->prepare($sql);
-// $stmt->bind_param("isss", $ID, $firstName, $lastName, $comment);
-// $result = $stmt->execute();
+    $stmt->close();
     try {
       if ($result === false) {
         throw new Exception("Error:cant get results " . $stmt->error);
@@ -60,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 
-<!--
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -72,9 +70,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
   <h1>Comments</h1>
 
+  <form method="post" action="index.php">
+    <label for="firstname">First Name:</label><br>
+    <input type="text" id="firstname" name="firstname" required><br>
+    <label for="lastname">Last Name:</label><br>
+    <input type="text" id="lastname" name="lastname" required><br>
+    <label for="comment">Comment:</label><br>
+    <textarea id="comment" name="comment" required></textarea><br>
+    <input type="submit" value="Submit">
+
 
 </body>
 <script src="script.js"></script>
 <link rel="stylesheet" type="text/css" href="first.css">
 
-</html>-->
+</html>
