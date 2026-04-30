@@ -1,60 +1,118 @@
 <?php
 
+class Dbconnection
+{
+  private $database;
+  private $statusCode = 0;
+  private $result = array();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (isset($_POST["firstname"]) && isset($_POST["lastname"]) && isset($_POST["comment"])) {
-
-    $firstName = trim($_POST['firstname']);
-    $lastName = trim($_POST['lastname']);
-    $comment = trim($_POST['comment']);
+  private $rows;
+  
+  public function __construct()
+  {
 
     $servername = "localhost";
     $username = "jja43_comment";
     $password = "ExcalMorgan";
     $dbname = "jja43_art";
 
-    $conn = new mysqli($servername, $username, $password, $dbname);
     try {
-      if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-      }
-      echo "Connected successfully";
-    } catch (Exception $e) {
-      echo "Connection failed: " . $e->getMessage();
-    }
 
+      $this->database = new mysqli($servername, $username, $password, $dbname);
 
-
-    $sql = " INSERT INTO people (firstname, lastname, comment) VALUES (? ,?, ?) ";
-
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-      die('Prepare failed: ' . $conn->error);
-    }
-    $stmt->bind_param("sss", $firstName, $lastName, $comment);
-    $result = $stmt->execute();
-
-
-    if ($result === false) {
-      throw new Exception("Error: " . $stmt->error);
-    }
-    $stmt->close();
-    try {
-      if ($result === false) {
-        throw new Exception("Error:cant get results " . $stmt->error);
+      if ($this->database->connect_error) {
+        throw new Exception("Connection failed: " . $this->database->connect_error);
       }
     } catch (Exception $e) {
       echo "Error: " . $e->getMessage();
+      exit();
+    }
+
+  }
+
+  function __destruct()
+  {
+    $this->database->close();
+  }
+
+  function handleRequestType()
+  {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      $this->handlePostRequest();
+    }else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+      $this->handleGetRequest();
+    } else {
+      http_response_code(405);
     }
 
 
-  } else {
-    http_response_code(400);
   }
-} else {
-  http_response_code(405);
-}
 
+
+  function handlePostRequest()
+  {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      if (isset($_POST["firstname"]) && isset($_POST["lastname"]) && isset($_POST["comment"])) {
+
+        $firstName = trim($_POST['firstname']);
+        $lastName = trim($_POST['lastname']);
+        $comment = trim($_POST['comment']);
+
+
+
+        $sql = " INSERT INTO people (firstname, lastname, comment) VALUES (? ,?, ?) ";
+
+        $stmt = $this->database->prepare($sql);
+        if (!$stmt) {
+          throw new Exception("Prepare failed: " . $this->database->error);
+        }
+        $stmt->bind_param("sss", $firstName, $lastName, $comment);
+        $result = $stmt->execute();
+
+
+        if ($result === false) {
+          throw new Exception("Error: " . $stmt->error);
+        }
+        $stmt->close();
+        try {
+          if ($result === false) {
+            throw new Exception("Error:cant get results " . $stmt->error);
+          }
+        } catch (Exception $e) {
+          echo "Error: " . $e->getMessage();
+        }
+
+
+      } else {
+        http_response_code(400);
+      }
+
+    }
+
+  }
+
+  function handleGetRequest()
+  {
+
+
+    $sql = "SELECT firstname, lastname, comment FROM people WHERE oid = (?)";
+    mysqli_report( MYSQLI_REPORT_STRICT);
+    try{
+     $this->database->prepare($sql);
+    $result = $this->database->query($sql);
+
+    if ($result === false) {
+    throw new Exception("". $this->database->error);
+    } else {
+      while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+      }
+      $result->free();
+
+    }
+
+   }
+  }
 ?>
 
 
@@ -79,6 +137,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <textarea id="comment" name="comment" required></textarea><br>
     <input type="submit" value="Submit">
 
+  </form>
+
+  <?php if (empty($rows)): ?>
+    <li>No comments yet</li>
+  <?php else: ?>
+    <?php foreach ($rows as $c): ?>
+      <li>
+        <?php echo htmlspecialchars($c['firstname']); ?>
+        <?php echo htmlspecialchars($c['lastname']); ?>:
+        <?php echo htmlspecialchars($c['comment']); ?>
+      </li>
+    <?php endforeach; ?>
+  <?php endif; ?>
+  </ul>
+  </div>
 
 </body>
 <script src="script.js"></script>
