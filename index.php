@@ -48,6 +48,47 @@ class Dbconnection
 
   }
 
+  function handleGetRequest()
+  {
+    $oid = isset($_GET['oid']) ? $_GET['oid'] : null;
+    
+    if (!$oid) {
+      http_response_code(400);
+      echo json_encode(["error" => "oid parameter required"]);
+      return;
+    }
+
+    $sql = "SELECT firstname, lastname, comment FROM people WHERE oid = ?";
+    mysqli_report(MYSQLI_REPORT_STRICT);
+    
+    try {
+      $stmt = $this->database->prepare($sql);
+      if (!$stmt) {
+        throw new Exception("Prepare failed: " . $this->database->error);
+      }
+      
+      $stmt->bind_param("i", $oid);
+      $stmt->execute();
+      $resultSet = $stmt->get_result();
+      
+      if (!$resultSet) {
+        throw new Exception("Error: " . $stmt->error);
+      } else {
+        $rows = [];
+        while ($row = $resultSet->fetch_assoc()) {
+          $rows[] = $row;
+        }
+        http_response_code(200);
+        echo json_encode($rows);
+      }
+      $stmt->close();
+      
+    } catch (Exception $e) {
+      http_response_code(500);
+      echo "Error: " . $e->getMessage();
+    }
+  }
+
 
   function handlePostRequest()
   {
@@ -58,103 +99,37 @@ class Dbconnection
         $lastName = trim($_POST['lastname']);
         $comment = trim($_POST['comment']);
 
-
-
-        $sql = " INSERT INTO people (firstname, lastname, comment) VALUES (? ,?, ?) ";
+        $sql = "INSERT INTO people (firstname, lastname, comment) VALUES (?, ?, ?)";
 
         $stmt = $this->database->prepare($sql);
         if (!$stmt) {
-          throw new Exception("Prepare failed: " . $this->database->error);
+          http_response_code(500);
+          echo json_encode(["error" => "Prepare failed: " . $this->database->error]);
+          return;
         }
+        
         $stmt->bind_param("sss", $firstName, $lastName, $comment);
         $result = $stmt->execute();
 
-
         if ($result === false) {
-          throw new Exception("Error: " . $stmt->error);
+          http_response_code(500);
+          echo json_encode(["error" => "Error: " . $stmt->error]);
+        } else {
+          http_response_code(201);
+          echo json_encode(["success" => "Record inserted successfully"]);
         }
         $stmt->close();
-        try {
-          if ($result === false) {
-            throw new Exception("Error:cant get results " . $stmt->error);
-          }
-        } catch (Exception $e) {
-          echo "Error: " . $e->getMessage();
-        }
 
 
       } else {
         http_response_code(400);
+        echo json_encode(["error" => "Missing required fields: firstname, lastname, comment"]);
       }
-
+     }
     }
 
-  }
 
-  function handleGetRequest()
-  {
-
-
-    $sql = "SELECT firstname, lastname, comment FROM people WHERE oid = (?)";
-    mysqli_report( MYSQLI_REPORT_STRICT);
-    try{
-     $this->database->prepare($sql);
-    $result = $this->database->query($sql);
-
-    if ($result === false) {
-    throw new Exception("". $this->database->error);
-    } else {
-      while ($row = $result->fetch_assoc()) {
-        $rows[] = $row;
-      }
-      $result->free();
-
-    }
-
-   }
-  }
+$db = new Dbconnection();
+$db->handleRequestType();
+}
 ?>
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <title>Index of examples</title>
-</head>
-
-<body>
-  <h1>Comments</h1>
-
-  <form method="post" action="index.php">
-    <label for="firstname">First Name:</label><br>
-    <input type="text" id="firstname" name="firstname" required><br>
-    <label for="lastname">Last Name:</label><br>
-    <input type="text" id="lastname" name="lastname" required><br>
-    <label for="comment">Comment:</label><br>
-    <textarea id="comment" name="comment" required></textarea><br>
-    <input type="submit" value="Submit">
-
-  </form>
-
-  <?php if (empty($rows)): ?>
-    <li>No comments yet</li>
-  <?php else: ?>
-    <?php foreach ($rows as $c): ?>
-      <li>
-        <?php echo htmlspecialchars($c['firstname']); ?>
-        <?php echo htmlspecialchars($c['lastname']); ?>:
-        <?php echo htmlspecialchars($c['comment']); ?>
-      </li>
-    <?php endforeach; ?>
-  <?php endif; ?>
-  </ul>
-  </div>
-
-</body>
-<script src="script.js"></script>
-<link rel="stylesheet" type="text/css" href="first.css">
-
-</html>
